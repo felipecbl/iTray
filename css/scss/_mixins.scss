@@ -1,0 +1,267 @@
+// Float, display and position
+@mixin fdp{
+	float: left;
+	display: block;
+	position: relative;
+}
+
+
+// Define 200px border radius
+@mixin circle($radius: 200px){
+	@include border-radius($radius);
+}
+
+
+// Default border radius
+@mixin rounded($radius: $rounded){
+	@include border-radius($radius);
+}
+
+
+// Define box sizing to border-box
+@mixin border-box{
+	@include box-sizing(border-box);
+}
+
+
+//Set default text shadow
+@mixin txt-shadow($shadow-settings: #dcdcdc 0 0 2px){
+	@include text-shadow($shadow-settings);
+}
+
+
+//Set default box shadow
+@mixin shadow($shadow-settings: #dcdcdc 1px 1px 2px){
+	@include box-shadow($shadow-settings);
+}
+
+
+// Animations
+@mixin animation($property) {
+	$vendor: '', '-webkit-', '-moz-', '-ms-', '-o-';
+	@each $prefix in $vendor {
+		#{$prefix}animation: $property;
+	}
+}
+
+// @mixin animation($str) {
+// 	-webkit-animation: #{$str};
+// 	-moz-animation: #{$str};
+// 	-ms-animation: #{$str};
+// 	-o-animation: #{$str};
+// 	animation: #{$str};
+// }
+// Usage: @include animation('slide-down 5s 3');
+
+
+//Keyframes
+@mixin keyframes($animation-name) {
+	@-webkit-keyframes $animation-name {
+		@content;
+	}
+	@-moz-keyframes $animation-name {
+		@content;
+	}
+	@-ms-keyframes $animation-name {
+		@content;
+	}
+	@-o-keyframes $animation-name {
+		@content;
+	}
+	@keyframes $animation-name {
+		@content;
+	}
+}
+/* Usage
+@include keyframes(slide-down) {
+	0% { opacity: 1; }
+	90% { opacity: 0; }
+} */
+
+
+// Transitions
+@mixin transition($args...) {
+	-webkit-transition: $args;
+	-moz-transition: $args;
+	-ms-transition: $args;
+	-o-transition: $args;
+	transition: $args;
+}
+// Usage @include transition(color .3s ease);
+
+
+//Opacity
+@mixin opacity($opacity) {
+	opacity: $opacity;
+	$opacity-ie: $opacity * 100;
+	filter: alpha(opacity=$opacity-ie); //IE8
+}
+// Usage: @include opacity(0.8);
+
+
+// Clearfix
+%clearfix {
+	*zoom: 1;
+	&:before, &:after {
+		content: " ";
+		display: table;
+	}
+	&:after {
+		clear: both;
+	}
+}
+// Usage: @extend %clearfix;
+
+
+// Center-align a block level element
+@mixin center-block {
+	display: block;
+	margin-left: auto;
+	margin-right: auto;
+}
+// Usage: @include center-block;
+
+
+// Absolute Positioned
+@mixin absolute-position ($top: auto, $right: auto, $bottom: auto, $left: auto) {
+	top: $top;
+	right: $right;
+	bottom: $bottom;
+	left: $left;
+	position: absolute;
+}
+// Usage: @include absolute-position(10px, 10px, 5px, 15px);
+
+
+// Font Size
+@mixin font-size($sizeValue: 12 ){
+	font-size: $sizeValue + px; //fallback for old browsers
+	font-size: (0.125 * $sizeValue) + rem;
+}
+// Usage: @include font-size(16);
+
+
+// Line Height
+@mixin line-height($heightValue: 12 ){
+	line-height: $heightValue + px; //fallback for old browsers
+	line-height: (0.125 * $heightValue) + rem;
+}
+// Usage: @include line-height (16);
+
+
+//Height and width
+@mixin width-height($width: auto, $height: auto){
+
+	@if type-of($width) == number{
+		// has unit?
+		width: if(unitless($width), $width + px, $width);
+	}@else{
+		width: $width;
+	}
+
+	@if type-of($height) == number{
+		// has unit?
+		height: if(unitless($height), $height + px, $height);
+	}@else{
+		height: $height;
+	}
+}
+// Usage: @include width-height(50, 50) or  width-height(50px, 50px) or  width-height(50%, 50%);
+
+
+@mixin margin-padding($margin: 0, $padding: 0){
+	margin: $margin;
+	padding: $padding;
+}
+
+
+@mixin placeholder {
+	::-webkit-input-placeholder {@content};
+	:-moz-placeholder           {@content};
+	::-moz-placeholder          {@content};
+	:-ms-input-placeholder      {@content};
+}
+
+
+@mixin clip-mask( $path, $path-id: svgClip ){
+	-webkit-clip-path: url($path);
+	-webkit-mask: url($path);
+	clip-path: url(#{$path}#{$path-id});
+}
+
+@mixin calc($property, $expression) {
+  #{$property}: -moz-calc(#{$expression});
+  #{$property}: -o-calc(#{$expression});
+  #{$property}: -webkit-calc(#{$expression});
+  #{$property}: calc(#{$expression});
+}
+
+// Usage:
+// @include calc(width, '50% - 5px');
+
+.center{
+	text-align: center !important;
+}
+
+
+.middle{
+	margin: 50% 0 0;
+}
+
+
+.white{
+	background: #fff;
+}
+
+
+.hide-me{
+	opacity: 0;
+
+	&:hover{
+		cursor: default !important;
+	}
+}
+
+// .progress-bar{
+//     @include animation(2s linear 0s normal none infinite animate-stripes);
+// 	@include background-image(linear-gradient(-45deg, rgba(0, 0, 0, 0.05) 25%, transparent 25%, transparent 50%, rgba(0, 0, 0, 0.05) 50%, rgba(0, 0, 0, 0.05) 75%, transparent 75%, transparent));
+// 	@include background-size(45px 45px);
+// 	@include rounded;
+// 	cursor: default;
+// 	height: 30px;
+// }
+
+// @include keyframes(animate-stripes) {
+// 	0%{background-position: 0 0;}
+// 	100%{background-position: 90px 0;}
+// }
+
+//Style for printing
+@media print{
+	.no-printing{
+		display: none;
+	}
+}
+
+
+@mixin breakpoint($class) {
+  @if $class == xs {
+    @media (max-width: 767px) { @content; }
+  }
+
+  @else if $class == sm {
+    @media (min-width: 768px) { @content; }
+  }
+
+  @else if $class == md {
+    @media (min-width: 992px) { @content; }
+  }
+
+  @else if $class == lg {
+    @media (min-width: 1200px) { @content; }
+  }
+
+  @else {
+    @warn "Breakpoint mixin supports: xs, sm, md, lg";
+  }
+}

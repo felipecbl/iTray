@@ -1,0 +1,26 @@
+@import "compass/reset";
+@import "compass/css3";
+@import "compass/css3/user-interface";
+@import "compass/css3/images";
+@import "compass/css3/background-size";
+
+@import "mixins";
+
+html{
+	height: 100%;
+}
+
+body{
+	@include border-box;
+	background: LightSlateGray;
+	height: 100%;
+	margin: 0;
+	padding: 10% 0;
+}
+
+.container{
+	@include border-box;
+	height: 100%;
+	text-align: center;
+	width: 100%;
+}
