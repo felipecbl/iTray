@@ -20,11 +20,9 @@
 		// Current angle set by device
 		if(isset($_GET['angle'])){
 			$angle = $_GET['angle'];
-			// echo "Device's angle: ". $angle;
 		}
 
 		// Set tray last angle from device
-
 		$wheelSql = "UPDATE wheel SET last_angle = " . $angle . " WHERE id = 1";
 
 		$db->query($wheelSql);
