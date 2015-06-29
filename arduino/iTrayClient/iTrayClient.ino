@@ -12,10 +12,20 @@ const char* ssid     = "White Castle";
 const char* password = "castel0branc0";
 
 //const char* host = "data.sparkfun.com";
-const char* host = "itray.website";
+const char* host = "www.p3studio.ca";
+
+void getWiFi(){ 
+  while (WiFi.status() != WL_CONNECTED) {
+    digitalWrite(2, HIGH);
+    delay(500);
+    Serial.print(".");
+    digitalWrite(2, LOW);
+  }
+}
 
 void setup() {
   Serial.begin(9600);
+  pinMode(2, OUTPUT);
   delay(10);
 
   // We start by connecting to a WiFi network
@@ -26,13 +36,8 @@ void setup() {
   Serial.println(ssid);
   
   WiFi.begin(ssid, password);
-  
-  while (WiFi.status() != WL_CONNECTED) {
-    digitalWrite(2, HIGH);
-    delay(500);
-    Serial.print(".");
-    digitalWrite(2, LOW);
-  }
+
+  getWiFi();
 
   Serial.println("");
   Serial.println("WiFi connected");  
@@ -43,6 +48,8 @@ void setup() {
 //int value = 0;
 
 void loop() {
+
+  getWiFi();
   delay(2000);
 //  ++value;
   digitalWrite(2, HIGH);
@@ -53,7 +60,7 @@ void loop() {
   if (!client.connect(host, httpPort)) {
     Serial.println("connection failed");
     digitalWrite(2, LOW);
-//    return;
+    return;
   }
 
   int trayAngle = 45;
@@ -62,35 +69,35 @@ void loop() {
     Serial.print("Connected to: ");
     Serial.println(host);
 
-    String postString = " /getWheel.php";
+    String postString = " /itray/getWheel.php";
+//    String postString = " /home/content/36/5998036/html/itray/getWheel.php";
 //    postString += "?angle=";
 //    postString += trayAngle;
 //    postString += "&json" ;
 
 
     client.print(String("GET ") + postString + "HTTP/1.1\n"); 
-//    client.print("Host: buyatab.com\n"); 
-//     client.print("Connection: close\n"); 
-//    client.print("Content-Type: text/html\n"); 
-//    client.print("Content-Length: "); 
-//    client.print(postString.length());  
-//    client.print("\n\n"); 
-//    client.print(postString);   
+    client.print("Host: www.p3studio.ca\n"); 
+    client.print("Connection: close\n"); 
+    client.print("Content-Type: text/html\n"); 
+    client.print("Content-Length: "); 
+    client.print(postString.length());  
+    client.print("\n\n"); 
+    client.print(postString);   
 
-client.print("Accept:  text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-client.print("Accept-Encoding: gzip, deflate");
-client.print("Accept-Language: en-US,en;q=0.5");
-client.print("Cache-Control: max-age=0");
-client.print("Connection:  keep-alive");
-client.print("Host:  itray.website");
+//client.print("Accept:  text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+//client.print("Accept-Encoding: gzip, deflate");
+//client.print("Accept-Language: en-US,en;q=0.5");
+//client.print("Cache-Control: max-age=0");
+//client.print("Connection:  keep-alive");
+//client.print("Host:  www.p3studio.ca");
 
     
     Serial.print("Requesting URL: ");
     Serial.println(postString);
     
     // This will send the request to the server
-  //  client.print(String("GET ") + url + " HTTP/1.1\r\nHost: " + host + "\r\n\r\n"); 
-  //               "Host: " + host + "\r\n\r\n" + "Connection: close\r\n\r\n");
+//    client.print(String("GET ") + postString + " HTTP/1.1\r\nHost: " +host + "\r\n" + "Connection: close\r\n\r\n");
     
     // Read all the lines of the reply from server and print them to Serial
   //  while(client.available()){
