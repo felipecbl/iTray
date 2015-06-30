@@ -11,8 +11,8 @@ const String tray_connected = "\"tray_connected\":\"";
 const String user_connected = "\"user_connected\":\"";
 const String last_angle = "\"last_angle\":\"";
 
-const char* ssid     = "White Castle";
-const char* password = "castel0branc0";
+const char* ssid     = "Buyatab-guest";
+const char* password = "Egiftc4rds12";
 
 //const char* host = "data.sparkfun.com";
 const char* host = "www.itray.website";
@@ -81,7 +81,7 @@ void loop() {
     client.print(String("GET ") + postString + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
                  "Connection: close\r\n\r\n");
-    
+
     delay(500);
 
     // Read all the lines of the reply from server and print them to Serial
@@ -92,18 +92,18 @@ void loop() {
       if (line.indexOf("\"success\":true") != -1){
         Serial.println("Success!!");
 
-        Serial.print("Current angle: ");        
+        Serial.print("Current angle: ");
         Serial.println(getValue(line, current_angle, "\""));
 
-        Serial.print("Current Tray Connected: ");        
+        Serial.print("Current Tray Connected: ");
         Serial.println(getValue(line, tray_connected, "\""));
 
-        Serial.print("Current User Connected: ");        
+        Serial.print("Current User Connected: ");
         Serial.println(getValue(line, user_connected, "\""));
 
-        Serial.print("Current last angle: ");        
-        Serial.println(getValue(line, last_angle, "\""));        
-      }      
+        Serial.print("Current last angle: ");
+        Serial.println(getValue(line, last_angle, "\""));
+      }
     }
 
     Serial.println();
@@ -115,7 +115,7 @@ String getValue(String webString, String startString, String endString) {
   if (webString.indexOf(startString) != -1){
       int sStart = webString.indexOf(startString) + startString.length();
       int sEnd = webString.indexOf(endString, sStart);
-      
+
       return  webString.substring(sStart, sEnd);
   }
   return "";
