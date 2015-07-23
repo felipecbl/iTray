@@ -5,6 +5,11 @@
  */
 
 #include <ESP8266WiFi.h>
+#include <Servo.h>
+
+Servo myservo;
+int pos = 0;
+int trayPos = 0;
 
 const String current_angle = "\"current_angle\":\"";
 const String tray_connected = "\"tray_connected\":\"";
@@ -46,12 +51,13 @@ void setup() {
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   getWiFi();
+  myservo.attach(14);
 
 }
 
 void loop() {
   getWiFi();
-//  delay(2000);
+  //  delay(2000);
   digitalWrite(2, HIGH);
 
   // Use WiFiClient class to create TCP connections
@@ -81,7 +87,7 @@ void loop() {
     client.print(String("GET ") + postString + " HTTP/1.1\r\n" +
                  "Host: " + host + "\r\n" +
                  "Connection: close\r\n\r\n");
-    
+
     delay(500);
 
     // Read all the lines of the reply from server and print them to Serial
@@ -89,34 +95,74 @@ void loop() {
       String line = client.readStringUntil('\r');
       Serial.print(line);
 
-      if (line.indexOf("\"success\":true") != -1){
+      if (line.indexOf("\"success\":true") != -1) {
         Serial.println("Success!!");
 
-        Serial.print("Current angle: ");        
+        Serial.print("Current angle: ");
         Serial.println(getValue(line, current_angle, "\""));
 
-        Serial.print("Current Tray Connected: ");        
+        Serial.print("Current Tray Connected: ");
         Serial.println(getValue(line, tray_connected, "\""));
 
-        Serial.print("Current User Connected: ");        
+        Serial.print("Current User Connected: ");
         Serial.println(getValue(line, user_connected, "\""));
 
-        Serial.print("Current last angle: ");        
-        Serial.println(getValue(line, last_angle, "\""));        
-      }      
-    }
+        Serial.print("Current last angle: ");
+        Serial.println(getValue(line, last_angle, "\""));
 
-    Serial.println();
+        trayPos = getValue(line, current_angle, "\"").toInt();
+
+        
+        if (pos != trayPos) {
+        Serial.println("not equal values: ");
+        Serial.print("Old Position: ");
+        Serial.println(pos);
+        Serial.print("New tray position: ");
+        Serial.println(trayPos);
+          
+          rotate();
+        }
+    }
+  }
+
+  Serial.println();
     Serial.println("closing connection");
   }
 }
 
+boolean isBigger(int firstNumber, int secondNumber) {
+  if (firstNumber > secondNumber) {
+    return true;
+  }
+  return false;
+}
+
+void rotate() {
+  if (isBigger(trayPos, pos)) {
+    int diff = trayPos - pos;
+    Serial.println(diff);
+  for (pos = 90; pos <= 180; pos += 1) {
+      myservo.write(pos);
+      delay(diff);
+    }
+  } else {
+    int diff = pos - trayPos;
+    Serial.println(diff);
+    for (pos = 90; pos >= 0; pos -= 1) {
+      myservo.write(pos);
+      delay(diff);
+    }
+  }
+  myservo.write(90);
+  pos = trayPos;
+}
+
 String getValue(String webString, String startString, String endString) {
-  if (webString.indexOf(startString) != -1){
-      int sStart = webString.indexOf(startString) + startString.length();
-      int sEnd = webString.indexOf(endString, sStart);
-      
-      return  webString.substring(sStart, sEnd);
+  if (webString.indexOf(startString) != -1) {
+    int sStart = webString.indexOf(startString) + startString.length();
+    int sEnd = webString.indexOf(endString, sStart);
+
+    return  webString.substring(sStart, sEnd);
   }
   return "";
 }
