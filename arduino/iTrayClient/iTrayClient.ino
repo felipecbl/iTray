@@ -112,20 +112,19 @@ void loop() {
 
         trayPos = getValue(line, current_angle, "\"").toInt();
 
-        
         if (pos != trayPos) {
-          Serial.println("not equal values: ");
+          Serial.println("New values: ");
           Serial.print("Old Position: ");
           Serial.println(pos);
           Serial.print("New tray position: ");
           Serial.println(trayPos);
-          
+
           rotate();
         }
+      }
     }
-  }
 
-  Serial.println();
+    Serial.println();
     Serial.println("closing connection");
   }
 }
@@ -141,7 +140,7 @@ void rotate() {
   if (isBigger(trayPos, pos)) {
     int diff = trayPos - pos;
     Serial.println(diff);
-  for (pos = 90; pos <= 180; pos += 1) {
+    for (pos = 90; pos <= 180; pos += 1) {
       myservo.write(pos);
       delay(diff);
     }
