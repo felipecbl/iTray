@@ -114,11 +114,11 @@ void loop() {
 
         
         if (pos != trayPos) {
-        Serial.println("not equal values: ");
-        Serial.print("Old Position: ");
-        Serial.println(pos);
-        Serial.print("New tray position: ");
-        Serial.println(trayPos);
+          Serial.println("not equal values: ");
+          Serial.print("Old Position: ");
+          Serial.println(pos);
+          Serial.print("New tray position: ");
+          Serial.println(trayPos);
           
           rotate();
         }
