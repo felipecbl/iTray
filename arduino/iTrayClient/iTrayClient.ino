@@ -138,14 +138,16 @@ boolean isBigger(int firstNumber, int secondNumber) {
 
 void rotate() {
   if (isBigger(trayPos, pos)) {
-    int diff = trayPos - pos;
+    int diff = (trayPos - pos) / 10;
+    Serial.print("Spinning time: ");
     Serial.println(diff);
     for (pos = 90; pos <= 180; pos += 1) {
       myservo.write(pos);
       delay(diff);
     }
   } else {
-    int diff = pos - trayPos;
+    int diff = (pos - trayPos) / 10;
+    Serial.print("Spinning time: ");
     Serial.println(diff);
     for (pos = 90; pos >= 0; pos -= 1) {
       myservo.write(pos);
