@@ -66,7 +66,7 @@ void setup() {
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
-  
+
   attachInterrupt(encoder0PinB, doEncoderA, FALLING);
 
   WiFi.mode(WIFI_STA);
@@ -193,7 +193,7 @@ void rotate(){
 
   myservo.write(90);
   pos = trayPos;
-  
+
 }
 
 // define direction of the wheel
@@ -204,13 +204,13 @@ void getDirection(){
       posDiff = 360 - trayPos + pos;
     }else{
       trayDirection = CW;
-      posDiff = trayPos - pos;      
+      posDiff = trayPos - pos;
     }
   }else{
     if (pos - trayPos > 180){
       trayDirection = CW;
       posDiff = 360 - pos + trayPos;
-    }else{      
+    }else{
       trayDirection = AC;
       posDiff = pos - trayPos;
     }
@@ -221,13 +221,13 @@ void getDirection(){
 void doEncoderA(){
   if(trayDirection == CW){
     encoder0Pos ++;
-    if(encoder0Pos > 360){
-      encoder0Pos = 1; 
+    if(encoder0Pos > 120){
+      encoder0Pos = 1;
     }
   }else{
     encoder0Pos --;
     if(encoder0Pos < 1){
-      encoder0Pos = 360;
+      encoder0Pos = 120;
     }
   }
   Serial.println (encoder0Pos, DEC);
