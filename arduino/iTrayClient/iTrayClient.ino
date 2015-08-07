@@ -7,9 +7,27 @@
 #include <ESP8266WiFi.h>
 #include <Servo.h>
 
+//Encoder
+#define encoder0PinA 5
+#define encoder0PinB 4
+long encoder0Pos = 0;
+
 Servo myservo;
+
+
 int pos = 0;
 int trayPos = 0;
+int posDiff = 0;
+
+//wheelDirection type => STATIC = Static, CW = Clockwise, AC = Anticlockwise
+enum wheelDirection {
+  STATIC,
+  CW,
+  AC
+};
+
+//Define initial direction as static
+wheelDirection trayDirection = STATIC;
 
 const String current_angle = "\"current_angle\":\"";
 const String tray_connected = "\"tray_connected\":\"";
@@ -48,12 +66,16 @@ void setup() {
   Serial.print("Connecting to ");
   Serial.println(ssid);
 
+  
+  attachInterrupt(encoder0PinB, doEncoderA, FALLING);
+
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
   getWiFi();
   myservo.attach(14);
 
 }
+
 
 void loop() {
   getWiFi();
@@ -69,7 +91,7 @@ void loop() {
     return;
   }
 
-  int trayAngle = 45;
+//  int trayAngle = 45;
   if (client.connect(host, 80)) {
 
     Serial.print("Connected to: ");
@@ -136,26 +158,79 @@ boolean isBigger(int firstNumber, int secondNumber) {
   return false;
 }
 
-void rotate() {
-  if (isBigger(trayPos, pos)) {
-    int diff = (trayPos - pos) / 10;
-    Serial.print("Spinning time: ");
-    Serial.println(diff);
-    for (pos = 90; pos <= 180; pos += 1) {
-      myservo.write(pos);
-      delay(diff);
-    }
-  } else {
-    int diff = (pos - trayPos) / 10;
-    Serial.print("Spinning time: ");
-    Serial.println(diff);
-    for (pos = 90; pos >= 0; pos -= 1) {
-      myservo.write(pos);
-      delay(diff);
+//void rotate() {
+//  if (isBigger(trayPos, pos)) {
+//    int diff = (trayPos - pos) / 10;
+//    Serial.print("Spinning time: ");
+//    Serial.println(diff);
+//    for (pos = 90; pos <= 180; pos += 1) {
+//      myservo.write(pos);
+//      delay(diff);
+//    }
+//  } else {
+//    int diff = (pos - trayPos) / 10;
+//    Serial.print("Spinning time: ");
+//    Serial.println(diff);
+//    for (pos = 90; pos >= 0; pos -= 1) {
+//      myservo.write(pos);
+//      delay(diff);
+//    }
+//  }
+//  myservo.write(90);
+//  pos = trayPos;
+//}
+
+void rotate(){
+  getDirection();
+  int convertedAngle = posDiff / 3;
+  while(encoder0Pos != convertedAngle){
+    if(trayDirection == CW){
+      myservo.write(180);
+    }else{
+      myservo.write(0);
     }
   }
+
   myservo.write(90);
   pos = trayPos;
+  
+}
+
+// define direction of the wheel
+void getDirection(){
+  if (isBigger(trayPos, pos)) {
+    if (trayPos - pos > 180){
+      trayDirection = AC;
+      posDiff = 360 - trayPos + pos;
+    }else{
+      trayDirection = CW;
+      posDiff = trayPos - pos;      
+    }
+  }else{
+    if (pos - trayPos > 180){
+      trayDirection = CW;
+      posDiff = 360 - pos + trayPos;
+    }else{      
+      trayDirection = AC;
+      posDiff = pos - trayPos;
+    }
+  }
+}
+
+
+void doEncoderA(){
+  if(trayDirection == CW){
+    encoder0Pos ++;
+    if(encoder0Pos > 360){
+      encoder0Pos = 1; 
+    }
+  }else{
+    encoder0Pos --;
+    if(encoder0Pos < 1){
+      encoder0Pos = 360;
+    }
+  }
+  Serial.println (encoder0Pos, DEC);
 }
 
 String getValue(String webString, String startString, String endString) {
