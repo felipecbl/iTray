@@ -91,6 +91,7 @@ void getWiFi() {
 void processCaptive(){
   dnsServer.processNextRequest();
   webServer.handleClient();
+//  logln("Captive Loop ");
 }
 
 void accessPoint(){ 
@@ -108,9 +109,17 @@ void accessPoint(){
   
   Serial.println("Waiting for remote connection..."); 
   
+  webServer.on ( "/", handleNotFound );  
+  webServer.on ( "/localnetwork", handleGettingConection );
+  
   // replay to all requests with same HTML
-  webServer.onNotFound([]() {
+  webServer.onNotFound(handleNotFound);
+  
+  webServer.begin();
+  Serial.println("HTTP server started");
+}
 
+void handleNotFound(){
   int n = WiFi.scanNetworks();
   Serial.print(n);
   Serial.println(" networks found");
@@ -152,34 +161,21 @@ void accessPoint(){
     s += "<h1>Select your WiFi Network</h1><p>If you can't see your network try to restart your router.</p>";
 //    s += ipStr;
 //    s += "<p>";
-    s += "<form method='get' action='a'>";
+    s += "<form method='get' action='/localnetwork'>";
     s += responseHTML;
     s += "<label>Password (if applicable): </label><input name='pass' length=64><input type='submit'></form>";
     s += "</body></html>\r\n\r\n";  
               
     webServer.send(200, "text/html", s);
-  });
-  
-  webServer.begin();
-
-  WiFiClient client;
-
-
-  String req = client.readStringUntil('\r');
-
-  int addr_start = req.indexOf(' ');
-  int addr_end = req.indexOf(' ', addr_start + 1);
-  if (addr_start == -1 || addr_end == -1) {
-      Serial.print("Invalid request: ");
-      Serial.println(req);
-//      return(20);
-  }
-  req = req.substring(addr_start + 1, addr_end);
-  Serial.print("Request: ");
-  Serial.println(req);
-
 }
 
+void handleGettingConection(){
+  webServer.send ( 200, "text/plain", "Accessing WIFI..." );
+
+  Serial.println(webServer.uri());
+  Serial.println(webServer.arg(0));
+  Serial.println(webServer.arg(1));
+}
 void connectToServer(){
   
   // Use WiFiClient class to create TCP connections
