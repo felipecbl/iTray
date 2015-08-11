@@ -28,13 +28,17 @@ int getLastAngle(){
 }
 
 void setEeprom(int address, String data){
+  Serial.print("Saving to EEPROM: ");
+  Serial.println(data);
 
   for (int i = 0; i < data.length(); ++i){
     EEPROM.write(address+i, data[i]);
   }
+  EEPROM.commit();
 }
 
 String getEeprom(int address, int dataLength){
+  Serial.print("Loading from EEPROM: ");
   String value = "";
 
   for (int i = address; i < address + dataLength; ++i){
@@ -42,6 +46,7 @@ String getEeprom(int address, int dataLength){
       value += char(EEPROM.read(i)); 
     }
   }
+  Serial.println(value);
 
   return value;
 }

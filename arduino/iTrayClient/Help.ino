@@ -33,4 +33,3 @@ void log(String toPrint){
     Serial.print(String(toPrint));
   #endif
 }
-

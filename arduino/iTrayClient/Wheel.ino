@@ -105,6 +105,7 @@ void getDirection(){
 }
 
 void rotate(){
+  logln("rotating...");
   getDirection();
 
     if (trayDirection == STATIC){

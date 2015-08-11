@@ -17,6 +17,8 @@ const String tray_connected = "\"tray_connected\":\"";
 const String user_connected = "\"user_connected\":\"";
 const String last_angle = "\"last_angle\":\"";
 
+boolean captiveMode = true;
+boolean clientMode = false;
 
 //************************************
 // Temporary Wifi credentials
@@ -37,9 +39,8 @@ int wifiAtempt = 0;
 
 void initWifi(){
 
-  //    setNetworkId("My Id");
-  //    setNetworkPassword("My Password");
-
+//    setNetworkId("White Castle");
+//    setNetworkPassword("castel0branc0");
 
   // Check eeprom
   logln("Checking EEPROM...");
@@ -47,12 +48,21 @@ void initWifi(){
   getNetworkId().toCharArray(ssid, 32);
   getNetworkPassword().toCharArray(password, 64);
 
+  Serial.print("ssid: ");
+  Serial.println(ssid);
+  Serial.print("password: ");
+  Serial.println(password);
+
   if(getNetworkId() != NULL){
     logln("Retrieving Network info from EEPROM...");
     log("EEPROM Network Name: ");
     logln(ssid);
     log("EEPROM Network Password: ");
     logln(password);
+
+    
+    captiveMode = false;
+    clientMode = true;
     
     //Try to connect using EEPROM credentials
     logln("Connecting...");    
@@ -78,6 +88,7 @@ void getWiFi() {
     if(timeout >= 20){ //10 seconds enough?
       logln("Connection timeout");
       accessPoint();
+      break;
     }
   }
 
@@ -89,12 +100,16 @@ void getWiFi() {
 }
 
 void processCaptive(){
-  dnsServer.processNextRequest();
-  webServer.handleClient();
-//  logln("Captive Loop ");
+  if(captiveMode){
+    dnsServer.processNextRequest();
+    webServer.handleClient();
+  }
 }
 
 void accessPoint(){ 
+  captiveMode = true;
+  clientMode = false;
+  
   Serial.println("Starting Access Point mode (iTray Network).");   
   WiFi.mode(WIFI_AP);
   
@@ -109,8 +124,7 @@ void accessPoint(){
   
   Serial.println("Waiting for remote connection..."); 
   
-  webServer.on ( "/", handleNotFound );  
-  webServer.on ( "/localnetwork", handleGettingConection );
+  webServer.on ( "/", handleNotFound );
   
   // replay to all requests with same HTML
   webServer.onNotFound(handleNotFound);
@@ -120,121 +134,154 @@ void accessPoint(){
 }
 
 void handleNotFound(){
-  int n = WiFi.scanNetworks();
-  Serial.print(n);
-  Serial.println(" networks found");
+  if(webServer.args() > 0 && webServer.arg(0)){
 
-  
-  responseHTML = "<ul>";
-  for (int i = 0; i < n; ++i){
-      // Print SSID and RSSI for each network found
-      responseHTML += "<li><input type='radio' name='ssid' value='";
-      responseHTML += WiFi.SSID(i);
-      responseHTML += "' data-open='";
-      responseHTML += (WiFi.encryptionType(i) == ENC_TYPE_NONE)?"true":"false";
-      responseHTML += "'>";
-//        responseHTML +=i + 1;
-//        responseHTML += ": ";
-      responseHTML += WiFi.SSID(i);
-//        responseHTML += " (";
-//        responseHTML += WiFi.RSSI(i); // Signal strength in dBm
-//        responseHTML += ")";
-      responseHTML += (WiFi.encryptionType(i) == ENC_TYPE_NONE)?" (Open)":"";
-      responseHTML += "</li>";
-
-      Serial.print(i + 1);
-      Serial.print(": ");
-      Serial.print(WiFi.SSID(i));
-      Serial.print(" (");
-      Serial.print(WiFi.RSSI(i));
-      Serial.print(")");
-      Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE)?" ":"*");
-    }
-    responseHTML += "</ul>";
-
-    String s;
-    IPAddress ip = WiFi.softAPIP();
-    String ipStr = String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
+    String newID = String(webServer.arg(0));
+    String newPass = String(webServer.arg(1));
     
-    s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
-    s += "<!DOCTYPE html><html><head><title>iTray Network</title></head><body> ";
-    s += "<h1>Select your WiFi Network</h1><p>If you can't see your network try to restart your router.</p>";
-//    s += ipStr;
-//    s += "<p>";
-    s += "<form method='get' action='/localnetwork'>";
-    s += responseHTML;
-    s += "<label>Password (if applicable): </label><input name='pass' length=64><input type='submit'></form>";
-    s += "</body></html>\r\n\r\n";  
-              
-    webServer.send(200, "text/html", s);
-}
+    //Replace "+" to " " on the network Id only
+    newID.replace("+", " ");
 
-void handleGettingConection(){
-  webServer.send ( 200, "text/plain", "Accessing WIFI..." );
+    String plain = "Accessing WIFI...";
+    plain += "\nURI: ";
+    plain += webServer.uri();
+    plain += "\nNetwork: ";
+    plain += newID;
+    plain += "\nPassword: ";
+    plain += newPass; 
+    
+    webServer.send ( 200, "text/plain", plain );
 
-  Serial.println(webServer.uri());
-  Serial.println(webServer.arg(0));
-  Serial.println(webServer.arg(1));
-}
-void connectToServer(){
+    newID.toCharArray(ssid, 32);
+    newPass.toCharArray(password, 32);
+
+    // Store on the EEPROM
+    setNetworkId(ssid);
+    setNetworkPassword(password);
+    
+    captiveMode = false;
+    clientMode = true;
+
+    initWifi();
+
+  }else{
+    Serial.println("Portal home");  
+    
+    int n = WiFi.scanNetworks();
+    Serial.print(n);
+    Serial.println(" networks found");    
+    responseHTML = "<ul>";
+    for (int i = 0; i < n; ++i){
+        // Print SSID and RSSI for each network found
+        responseHTML += "<li><input type='radio' name='ssid' value='";
+        responseHTML += WiFi.SSID(i);
+        responseHTML += "' data-open='";
+        responseHTML += (WiFi.encryptionType(i) == ENC_TYPE_NONE)?"true":"false";
+        responseHTML += "'>";
+  //        responseHTML +=i + 1;
+  //        responseHTML += ": ";
+        responseHTML += WiFi.SSID(i);
+  //        responseHTML += " (";
+  //        responseHTML += WiFi.RSSI(i); // Signal strength in dBm
+  //        responseHTML += ")";
+        responseHTML += (WiFi.encryptionType(i) == ENC_TYPE_NONE)?" (Open)":"";
+        responseHTML += "</li>";
   
-  // Use WiFiClient class to create TCP connections
-  WiFiClient client;
-  const int httpPort = 80;
-  if (!client.connect(host, httpPort)) {
-    logln("connection failed");
-    return;
+        Serial.print(i + 1);
+        Serial.print(": ");
+        Serial.print(WiFi.SSID(i));
+        Serial.print(" (");
+        Serial.print(WiFi.RSSI(i));
+        Serial.print(")");
+        Serial.println((WiFi.encryptionType(i) == ENC_TYPE_NONE)?" ":"*");
+      }
+      responseHTML += "</ul>";
+  
+      String s;
+      IPAddress ip = WiFi.softAPIP();
+      String ipStr = String(ip[0]) + '.' + String(ip[1]) + '.' + String(ip[2]) + '.' + String(ip[3]);
+      
+      s = "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\n\r\n";
+      s += "<!DOCTYPE html><html><head><title>iTray Network</title></head><body> ";
+      s += "<h1>Select your WiFi Network</h1><p>If you can't see your network try to restart your router.</p>";
+  //    s += ipStr;
+      s += "<p> Arguments: ";
+      s += webServer.args();
+      s += "</p>";
+      s += "<form method='get' action='/'>";
+      s += responseHTML;
+      s += "<label>Password (if applicable): </label><input name='pass' length=64><input type='submit'></form>";
+      s += "</body></html>\r\n\r\n"; 
+       
+    captiveMode = true;
+    clientMode = false;
+                
+      webServer.send(200, "text/html", s);
   }
+}
 
-  if (client.connect(host, 80)) {
-
-    log("Connected to: ");
-    logln(host);
-
-    String postString = " /getWheel.php?json";
-
-    log("Requesting URL: ");
-    logln(postString);
-
-    // This will send the request to the server
-    client.print(String("GET ") + postString + " HTTP/1.1\r\n" +
-                 "Host: " + host + "\r\n" +
-                 "Connection: close\r\n\r\n");
-
-    delay(500);
-
-    // Read all the lines of the reply from server and print them to Serial
-    while (client.available()) {
-      String line = client.readStringUntil('\r');
-      log(line);
-
-      if (line.indexOf("\"success\":true") != -1) {
-        logln("Success!!");
-
-        log("Current angle: ");
-        logln(getValue(line, current_angle, "\""));
-
-//        log("Current Tray Connected: ");
-//        logln(getValue(line, tray_connected, "\""));
-//
-//        log("Current User Connected: ");
-//        logln(getValue(line, user_connected, "\""));
-//
-//        log("Current last angle: ");
-//        logln(getValue(line, last_angle, "\""));
-
-        remotePosition = getValue(line, current_angle, "\"").toInt();
-        // Convert 0 to 360
-        if(remotePosition == 0) remotePosition = 360;
-        
-        // if (trayPosition != remotePosition) {
-        if (!inTheRange()){
-          rotate();
+void connectToServer(){
+  if(clientMode){
+    initServo();
+    
+    // Use WiFiClient class to create TCP connections
+    WiFiClient client;
+    const int httpPort = 80;
+    if (!client.connect(host, httpPort)) {
+      logln("connection failed");
+      return;
+    }
+  
+    if (client.connect(host, 80)) {
+  
+      log("Connected to: ");
+      logln(host);
+  
+      String postString = " /getWheel.php?json";
+  
+      log("Requesting URL: ");
+      logln(postString);
+  
+      // This will send the request to the server
+      client.print(String("GET ") + postString + " HTTP/1.1\r\n" +
+                   "Host: " + host + "\r\n" +
+                   "Connection: close\r\n\r\n");
+  
+      delay(500);
+  
+      // Read all the lines of the reply from server and print them to Serial
+      while (client.available()) {
+        String line = client.readStringUntil('\r');
+        log(line);
+  
+        if (line.indexOf("\"success\":true") != -1) {
+          logln("Success!!");
+  
+          log("Current angle: ");
+          logln(getValue(line, current_angle, "\""));
+  
+  //        log("Current Tray Connected: ");
+  //        logln(getValue(line, tray_connected, "\""));
+  //
+  //        log("Current User Connected: ");
+  //        logln(getValue(line, user_connected, "\""));
+  //
+  //        log("Current last angle: ");
+  //        logln(getValue(line, last_angle, "\""));
+  
+          remotePosition = getValue(line, current_angle, "\"").toInt();
+          // Convert 0 to 360
+          if(remotePosition == 0) remotePosition = 360;
+          
+          // if (trayPosition != remotePosition) {
+          if (!inTheRange()){
+            rotate();
+          }
         }
       }
+  
+      logln("closing connection");
     }
-
-    logln("closing connection");
   }
 }
 
